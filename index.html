@@ -12,7 +12,7 @@
   --purple:#7a2cff; --win:#c0c0c0; --winDark:#808080; --navy:#000080;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0;overflow-x:hidden;max-width:100%}
 body{
   background:#0a0018;
   background-image:
@@ -68,7 +68,7 @@ body.locked{overflow:hidden;height:100svh}
 
 /* ---------- ПЛЕЕР СВЕРХУ ---------- */
 #player{
-  position:fixed;left:8px;right:8px;top:8px;z-index:50;max-width:520px;margin:0 auto;
+  position:fixed;left:0;right:0;top:8px;z-index:50;width:min(calc(100% - 16px),520px);margin:0 auto;
   background:var(--win);color:#000;border:2px solid;border-color:#fff #404040 #404040 #fff;
   box-shadow:3px 3px 0 #000;transform:translateY(-140%);transition:transform .6s cubic-bezier(.2,1.4,.4,1);
 }
@@ -130,20 +130,22 @@ h1.big{font-size:clamp(18px,6vw,34px);text-align:center;line-height:1.5;margin:1
 
 /* ---------- СЕРДЦЕ В КОНЦЕ ---------- */
 #finale{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;position:relative;padding:40px 16px}
-#heartBox{height:min(80vw,330px);display:flex;align-items:center;justify-content:center;width:100%}
+#heartBox{height:min(80vw,330px);display:flex;align-items:center;justify-content:center;width:100%;position:relative}
 #heart{width:min(36vw,150px);cursor:pointer;user-select:none;transition:transform .15s;filter:drop-shadow(0 0 18px rgba(255,0,102,.8))}
 #heart.shake{animation:shake .3s}
 @keyframes shake{20%{transform:rotate(-8deg) scale(var(--s))}50%{transform:rotate(7deg) scale(var(--s))}80%{transform:rotate(-4deg) scale(var(--s))}}
 #tapnote{font-size:11px;color:var(--yellow);text-align:center;line-height:1.8;min-height:40px}
-#boom{position:absolute;width:min(80vw,380px);pointer-events:none;opacity:0;transform:scale(.2)}
+#boom{position:absolute;inset:0;margin:auto;width:min(80vw,380px);aspect-ratio:1;pointer-events:none;opacity:0;transform:scale(.2)}
 #boom.go{animation:boom .7s ease-out forwards}
 @keyframes boom{30%{opacity:1;transform:scale(1.15) rotate(-6deg)}100%{opacity:0;transform:scale(1.5) rotate(4deg)}}
-#love{display:none;text-align:center;font-size:clamp(30px,10vw,62px);line-height:1.25;padding:0 10px}
-#love.on{display:block;animation:pop .8s cubic-bezier(.2,1.8,.4,1)}
+#love{display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;font-size:clamp(30px,10vw,62px);line-height:1.25;padding:0 10px}
+#love.on{display:flex;animation:pop .8s cubic-bezier(.2,1.8,.4,1)}
 @keyframes pop{from{transform:scale(0) rotate(-20deg)}}
 #love small{display:block;font-family:'Press Start 2P',monospace;font-size:10px;color:#fff;margin-top:22px;-webkit-text-fill-color:#fff}
 
 /* ---------- ЛЕТАЮЩЕЕ ---------- */
+#fl{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:40}
+#fl.off{display:none}
 .floater{position:fixed;bottom:-60px;z-index:40;pointer-events:none;animation:fly linear forwards;will-change:transform}
 @keyframes fly{to{transform:translate(var(--dx),-120vh) rotate(var(--rot))}}
 .fphrase{font-size:12px;padding:6px 10px;border:2px solid #000;box-shadow:3px 3px 0 #000;color:#000;max-width:70vw;line-height:1.5;font-weight:700}
@@ -205,16 +207,17 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60}
       <g fill="#ff7fb6"><rect x="2" y="1" width="2" height="1"/><rect x="1" y="2" width="1" height="2"/></g>
       <rect x="2" y="2" width="1" height="1" fill="#fff"/>
     </svg>
-    </div>
     <svg id="boom" viewBox="0 0 200 200">
       <polygon fill="#fff200" stroke="#000" stroke-width="5" points="100,5 120,60 175,30 145,85 195,105 140,120 165,180 105,140 80,195 72,135 15,160 50,110 5,80 62,70 35,20 90,55"/>
       <text x="100" y="118" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="26" fill="#ff0066" stroke="#000" stroke-width="1.5">БАХ!</text>
     </svg>
-    <div id="tapnote" class="pixel"></div>
     <div id="love" class="mono rainbow">Я очень<br>люблю тебя</div>
+    </div>
+    <div id="tapnote" class="pixel"></div>
   </section>
 </main>
 
+<div id="fl"></div>
 <canvas id="fx"></canvas>
 <audio id="audio" src="assets/loving-machine.mp3" preload="auto"></audio>
 
@@ -335,6 +338,7 @@ document.getElementById('bar').addEventListener('click',e=>{
 
 /* ---------- летающие сердечки и надписи ---------- */
 function floater(){
+  if(inFinale) return;
   const el=document.createElement('div'); el.className='floater';
   if(Math.random()<.06){
     el.innerHTML=`<div class="fphrase pixel" style="background:${pick(COLORS)}">${pick(LOVE_POPS)}</div>`;
@@ -343,19 +347,27 @@ function floater(){
   el.style.setProperty('--dx',rnd(-60,60)+'px');
   el.style.setProperty('--rot',rnd(-40,40)+'deg');
   const t=rnd(6,10); el.style.animationDuration=t+'s';
-  document.body.appendChild(el); setTimeout(()=>el.remove(),t*1000+200);
+  fl.appendChild(el); setTimeout(()=>el.remove(),t*1000+200);
 }
 function toast(){
-  if(loveShown) return;
+  if(loveShown||inFinale) return;
   const t=document.createElement('div'); t.className='toast';
   t.textContent=pick(LOVE_POPS);
-  document.body.appendChild(t); setTimeout(()=>t.remove(),2700);
+  fl.appendChild(t); setTimeout(()=>t.remove(),2700);
 }
 function sticker(){
+  if(inFinale) return;
   const s=document.createElement('img'); s.className='stick'; s.src='assets/'+pick(['sticker1.webp','sticker2.webp']);
   s.style.left=rnd(0,80)+'vw'; s.style.top=rnd(15,80)+'vh';
-  document.body.appendChild(s); setTimeout(()=>s.remove(),3000);
+  fl.appendChild(s); setTimeout(()=>s.remove(),3000);
 }
+const fl=document.getElementById('fl');
+let inFinale=false;
+new IntersectionObserver(es=>{
+  inFinale=es[0].isIntersecting;
+  fl.classList.toggle('off',inFinale);
+  if(inFinale) fl.innerHTML='';
+},{threshold:.2}).observe(document.getElementById('finale'));
 function startFloaters(){
   setInterval(floater,1100);
   setInterval(toast,28000); setTimeout(toast,12000);
