@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>♥</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik+Mono+One&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pink:#ff3fa4; --hot:#ff0066; --cyan:#00f0ff; --lime:#7dff3a; --yellow:#ffee00;
+  --purple:#7a2cff; --win:#c0c0c0; --winDark:#808080; --navy:#000080;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:#0a0018;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 90px 120px,#ffe,transparent),
+    radial-gradient(2px 2px at 160px 60px,#aff,transparent),
+    radial-gradient(1px 1px at 230px 170px,#fff,transparent),
+    radial-gradient(2px 2px at 60px 200px,#fcf,transparent);
+  background-size:260px 240px;
+  color:#fff;font-family:'Comfortaa',"Comic Sans MS",sans-serif;
+  overflow-x:hidden;
+}
+body.locked{overflow:hidden;height:100svh}
+.pixel{font-family:'Press Start 2P',monospace}
+.mono{font-family:'Rubik Mono One',sans-serif}
+
+/* ---------- ЭКРАН С ПЛАСТИНКОЙ ---------- */
+#intro{
+  min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:28px;padding:90px 16px 40px;position:relative;
+}
+.hint{font-size:13px;line-height:1.8;text-align:center;color:var(--yellow);
+  text-shadow:3px 3px 0 var(--hot);animation:blink 1.1s steps(1) infinite}
+.hint.hide{display:none}
+@keyframes blink{50%{opacity:0}}
+
+.vinyl-wrap{position:relative;width:min(78vw,360px);aspect-ratio:1;cursor:pointer}
+.vinyl{
+  position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle, transparent 0 31%, rgba(255,255,255,.05) 31.5% 32%, transparent 32.5%),
+    repeating-radial-gradient(circle,#111 0 2px,#1d1d1d 2px 3px,#0c0c0c 3px 5px),
+    #111;
+  box-shadow:0 0 0 6px #000,0 0 40px rgba(255,63,164,.55),0 0 90px rgba(0,240,255,.25);
+}
+.vinyl::after{ /* блик */
+  content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 30deg,transparent 0 10%,rgba(255,255,255,.16) 14%,transparent 20% 60%,rgba(255,255,255,.12) 64%,transparent 70%);
+}
+.label{
+  position:absolute;inset:0;border-radius:50%;overflow:hidden;
+}
+.label img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;transform:scale(1.5);opacity:0;transition:opacity 1.6s ease}
+.label.show img{opacity:1}
+.hole{position:absolute;left:50%;top:50%;width:6%;aspect-ratio:1;transform:translate(-50%,-50%);
+  border-radius:50%;background:#0a0018;box-shadow:0 0 0 2px #444;z-index:2}
+.spin{animation:spin 1.8s linear infinite}
+.spin.paused{animation-play-state:paused}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scroll-hint{font-size:10px;color:var(--cyan);opacity:0;transition:opacity 1s;text-align:center;line-height:2}
+.scroll-hint.on{opacity:1;animation:bob 1.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(8px)}}
+
+/* ---------- ПЛЕЕР СВЕРХУ ---------- */
+#player{
+  position:fixed;left:8px;right:8px;top:8px;z-index:50;max-width:520px;margin:0 auto;
+  background:var(--win);color:#000;border:2px solid;border-color:#fff #404040 #404040 #fff;
+  box-shadow:3px 3px 0 #000;transform:translateY(-140%);transition:transform .6s cubic-bezier(.2,1.4,.4,1);
+}
+#player.on{transform:none}
+.titlebar{background:linear-gradient(90deg,var(--navy),#1084d0);color:#fff;font-size:9px;
+  padding:5px 6px;display:flex;justify-content:space-between;align-items:center}
+.titlebar span:last-child{background:var(--win);color:#000;padding:0 4px;border:1px solid;border-color:#fff #404040 #404040 #fff}
+.prow{display:flex;align-items:center;gap:8px;padding:8px}
+.btn{
+  font-family:'Press Start 2P',monospace;font-size:10px;background:var(--win);color:#000;
+  border:2px solid;border-color:#fff #404040 #404040 #fff;padding:7px 9px;cursor:pointer;min-width:38px
+}
+.btn:active{border-color:#404040 #fff #fff #404040}
+.track{flex:1;min-width:0}
+.tname{font-size:9px;white-space:nowrap;overflow:hidden}
+.tname b{display:inline-block;animation:marq 9s linear infinite;padding-left:100%}
+@keyframes marq{to{transform:translateX(-100%)}}
+.bar{height:12px;margin-top:6px;background:#fff;border:2px solid;border-color:#404040 #fff #fff #404040;cursor:pointer;position:relative}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;
+  background:repeating-linear-gradient(90deg,var(--navy) 0 8px,transparent 8px 10px)}
+.time{font-size:8px;margin-top:6px;display:flex;justify-content:space-between}
+
+/* ---------- КОНТЕНТ ---------- */
+#content{display:none;padding:10px 12px 60px;max-width:760px;margin:0 auto}
+#content.on{display:block}
+.marquee{overflow:hidden;white-space:nowrap;border-top:3px dashed var(--yellow);border-bottom:3px dashed var(--yellow);
+  padding:10px 0;margin:6px -12px 26px;background:#2b0050}
+.marquee span{display:inline-block;padding-left:100%;animation:marq 16s linear infinite;font-size:12px;color:var(--lime)}
+.rainbow{background:linear-gradient(90deg,#ff004c,#ffb300,#fff200,#38ff00,#00e5ff,#7a2cff,#ff00c8,#ff004c);
+  background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:rb 3s linear infinite}
+@keyframes rb{to{background-position:300% 0}}
+h1.big{font-size:clamp(18px,6vw,34px);text-align:center;line-height:1.5;margin:10px 0 30px}
+
+.stream{display:flex;flex-direction:column;gap:30px;align-items:center}
+.reveal{opacity:0;transform:translateY(30px) scale(.9) rotate(var(--r,0deg));transition:opacity .7s, transform .7s cubic-bezier(.2,1.5,.4,1)}
+.reveal.in{opacity:1;transform:translateY(0) scale(1) rotate(var(--r,0deg))}
+
+.phrase{max-width:92%;text-align:center;padding:14px 18px;font-size:clamp(15px,4.6vw,22px);line-height:1.4;
+  border:4px solid #000;box-shadow:6px 6px 0 #000;color:#000;font-weight:700}
+.phrase.blinky{animation:glow 1.2s steps(2) infinite}
+@keyframes glow{50%{filter:hue-rotate(160deg)}}
+
+.window{background:var(--win);border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:5px 5px 0 #000;
+  width:min(88vw,340px);color:#000}
+.window .titlebar{font-size:8px}
+.window .body{padding:6px;background:var(--win)}
+.window img{display:block;width:100%;height:auto;image-rendering:auto;border:2px solid;border-color:#404040 #fff #fff #404040;background:#000}
+.window .cap{font-size:8px;padding:6px 2px 2px;text-align:center}
+
+.row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;width:100%}
+.row .window{width:min(42vw,220px)}
+
+.badge{display:inline-block;font-size:9px;padding:6px 8px;background:var(--yellow);color:#000;border:2px solid #000;margin:4px;animation:blink 1.6s steps(1) infinite}
+.counter{font-size:10px;text-align:center;line-height:2}
+.counter .digits{display:inline-block;background:#000;color:var(--lime);padding:4px 8px;border:2px inset #888;letter-spacing:3px}
+.construction{width:100%;height:18px;background:repeating-linear-gradient(45deg,#000 0 14px,var(--yellow) 14px 28px)}
+.webring{font-size:9px;text-align:center;line-height:2;color:var(--cyan)}
+.webring a{color:var(--pink)}
+
+/* ---------- СЕРДЦЕ В КОНЦЕ ---------- */
+#finale{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;position:relative;padding:40px 16px}
+#heartBox{height:min(80vw,330px);display:flex;align-items:center;justify-content:center;width:100%}
+#heart{width:min(36vw,150px);cursor:pointer;user-select:none;transition:transform .15s;filter:drop-shadow(0 0 18px rgba(255,0,102,.8))}
+#heart.shake{animation:shake .3s}
+@keyframes shake{20%{transform:rotate(-8deg) scale(var(--s))}50%{transform:rotate(7deg) scale(var(--s))}80%{transform:rotate(-4deg) scale(var(--s))}}
+#tapnote{font-size:11px;color:var(--yellow);text-align:center;line-height:1.8;min-height:40px}
+#boom{position:absolute;width:min(80vw,380px);pointer-events:none;opacity:0;transform:scale(.2)}
+#boom.go{animation:boom .7s ease-out forwards}
+@keyframes boom{30%{opacity:1;transform:scale(1.15) rotate(-6deg)}100%{opacity:0;transform:scale(1.5) rotate(4deg)}}
+#love{display:none;text-align:center;font-size:clamp(30px,10vw,62px);line-height:1.25;padding:0 10px}
+#love.on{display:block;animation:pop .8s cubic-bezier(.2,1.8,.4,1)}
+@keyframes pop{from{transform:scale(0) rotate(-20deg)}}
+#love small{display:block;font-family:'Press Start 2P',monospace;font-size:10px;color:#fff;margin-top:22px;-webkit-text-fill-color:#fff}
+
+/* ---------- ЛЕТАЮЩЕЕ ---------- */
+.floater{position:fixed;bottom:-60px;z-index:40;pointer-events:none;animation:fly linear forwards;will-change:transform}
+@keyframes fly{to{transform:translate(var(--dx),-120vh) rotate(var(--rot))}}
+.fphrase{font-size:12px;padding:6px 10px;border:2px solid #000;box-shadow:3px 3px 0 #000;color:#000;max-width:70vw;line-height:1.5;font-weight:700}
+.toast{position:fixed;z-index:45;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);
+  font-family:'Press Start 2P',monospace;font-size:12px;line-height:1.7;text-align:center;color:#000;background:var(--yellow);
+  border:3px solid #000;box-shadow:6px 6px 0 var(--hot);padding:12px 14px;max-width:86vw;pointer-events:none;
+  animation:toast 2.6s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes toast{15%{transform:translate(-50%,-50%) scale(1) rotate(-3deg)}80%{transform:translate(-50%,-50%) scale(1) rotate(2deg);opacity:1}100%{transform:translate(-50%,-50%) scale(.6);opacity:0}}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+.stick{position:fixed;width:70px;z-index:30;pointer-events:none;animation:wobble 2s ease-in-out infinite}
+@keyframes wobble{50%{transform:rotate(12deg) scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.hint,.badge,.phrase.blinky{animation:none}}
+</style>
+</head>
+<body class="locked">
+
+<!-- Плеер -->
+<div id="player">
+  <div class="titlebar pixel"><span>♫ WinAmp.exe</span><span>x</span></div>
+  <div class="prow">
+    <button class="btn" id="pp" aria-label="Пауза">❚❚</button>
+    <button class="btn" id="stop" aria-label="Стоп">■</button>
+    <div class="track pixel">
+      <div class="tname"><b>TV Girl — Loving Machine ★ TV Girl — Loving Machine ★</b></div>
+      <div class="bar" id="bar"><div class="fill" id="fill"></div></div>
+      <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Пластинка -->
+<section id="intro">
+  <div class="hint pixel" id="hint">ТЫКНИ<br>НА ПЛАСТИНКУ</div>
+  <div class="vinyl-wrap" id="vinylWrap" role="button" aria-label="Включить музыку">
+    <div class="vinyl" id="vinyl">
+      <div class="label" id="label"><img src="assets/cover.jpg" alt=""></div>
+    </div>
+    <div class="hole"></div>
+  </div>
+  <div class="scroll-hint pixel" id="scrollHint">листай вниз<br>▼ ▼ ▼</div>
+</section>
+
+<!-- Всё остальное -->
+<main id="content">
+    <div class="stream" id="stream"></div>
+
+  <div style="height:40px"></div>
+  <div class="construction"></div>
+
+  <section id="finale">
+    <div class="pixel" style="font-size:11px;text-align:center;line-height:1.9;color:var(--cyan)">Потапай ♥</div>
+    <div id="heartBox"><svg id="heart" viewBox="0 0 13 11" shape-rendering="crispEdges" aria-label="Сердечко">
+      <g fill="#ff0066">
+        <rect x="1" y="0" width="4" height="1"/><rect x="8" y="0" width="4" height="1"/>
+        <rect x="0" y="1" width="13" height="4"/><rect x="1" y="5" width="11" height="1"/>
+        <rect x="2" y="6" width="9" height="1"/><rect x="3" y="7" width="7" height="1"/>
+        <rect x="4" y="8" width="5" height="1"/><rect x="5" y="9" width="3" height="1"/><rect x="6" y="10" width="1" height="1"/>
+      </g>
+      <g fill="#ff7fb6"><rect x="2" y="1" width="2" height="1"/><rect x="1" y="2" width="1" height="2"/></g>
+      <rect x="2" y="2" width="1" height="1" fill="#fff"/>
+    </svg>
+    </div>
+    <svg id="boom" viewBox="0 0 200 200">
+      <polygon fill="#fff200" stroke="#000" stroke-width="5" points="100,5 120,60 175,30 145,85 195,105 140,120 165,180 105,140 80,195 72,135 15,160 50,110 5,80 62,70 35,20 90,55"/>
+      <text x="100" y="118" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="26" fill="#ff0066" stroke="#000" stroke-width="1.5">БАХ!</text>
+    </svg>
+    <div id="tapnote" class="pixel"></div>
+    <div id="love" class="mono rainbow">Я очень<br>люблю тебя</div>
+  </section>
+</main>
+
+<canvas id="fx"></canvas>
+<audio id="audio" src="assets/loving-machine.mp3" preload="auto"></audio>
+
+<script>
+const PHRASES = [
+  "Я помню день нашего знакомства",
+  "Надеюсь мы будем вспоминать это еще долго",
+  "МЕМЫЫЫЫЫЫЫЫЫ!!!",
+  "Ты самая лучшая",
+  "Афигеть, мы увиделись",
+  "Го в Японию?",
+  "Созвездие «Скрытый интриган» поражено твоей красотой",
+  "накормить 10 детей илиииии чикен бургер?",
+  "зеленый цвет самый прекрасный",
+  "КУДРЯШКИИИ!",
+  "Анекдот про супермена",
+  "Я помню как ты впервые сыграла мне на фортепиано",
+  "Давай обниматься",
+  "Сидят смущаются",
+  "Закажем роллы?",
+  "Ты умничкаааааааа"
+];
+const MEDIA = [
+  ["happy-cat.gif","happy-cat.gif"],["meme1.jpg","meme1.jpg"],["cat-flowers-cat-flower.gif","cat-flowers-cat-flower.gif"],
+  ["scuba-scuba-cat.gif","scuba-scuba-cat.gif"],["meme2.jpg","meme2.jpg"],["lego-lego-batman.gif","lego-lego-batman.gif"],
+  ["cat-eating.gif","cat-eating.gif"],["meme3.jpg","meme3.jpg"],["bear-jumpscare.gif","bear-jumpscare.gif"],
+  ["happy-cat-2.gif","happy-cat-2.gif"]
+];
+const COLORS = ["#ff3fa4","#00f0ff","#7dff3a","#ffee00","#ff9a00","#c38bff","#ff6b6b"];
+const FLOAT = ["♥","💖","💘","💕","✨","💗","🐱"];
+const LOVE_POPS = [
+  "Ты моя любимая",
+  "Скучаю по тебе",
+  "Ты делаешь меня счастливым",
+  "Обожаю твою улыбку",
+  "С тобой всегда тепло",
+  "Ты мое солнышко",
+  "Спасибо, что ты есть",
+  "Ты невероятная",
+  "Думаю о тебе",
+  "Ты лучшее, что со мной случилось"
+];
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ---------- собрать ленту ---------- */
+const stream=document.getElementById('stream');
+function phraseEl(t,i){
+  const d=document.createElement('div');
+  d.className='phrase reveal'+(i%4===2?' blinky':'');
+  d.textContent=t;
+  d.style.background=COLORS[i%COLORS.length];
+  d.style.setProperty('--r',(i%2?1:-1)*rnd(1.5,4.5)+'deg');
+  d.style.fontFamily=i%3===0?"'Press Start 2P',monospace":(i%3===1?"'Rubik Mono One',sans-serif":"'Comfortaa',sans-serif");
+  if(i%3===0) d.style.fontSize='clamp(11px,3.3vw,15px)';
+  return d;
+}
+function winEl([src,cap],i){
+  const w=document.createElement('div');
+  w.className='window reveal';
+  w.style.setProperty('--r',(i%2?1:-1)*rnd(1,3.5)+'deg');
+  w.innerHTML=`<div class="titlebar pixel"><span>${cap}</span><span>x</span></div><div class="body"><img loading="lazy" src="assets/${src}" alt=""></div>`;
+  return w;
+}
+let pi=0, mi=0, idx=0;
+while(pi<PHRASES.length || mi<MEDIA.length){
+  if(pi<PHRASES.length) stream.appendChild(phraseEl(PHRASES[pi++],idx++));
+  if(mi<MEDIA.length){
+    if(mi%3===2 && mi+1<MEDIA.length){
+      const r=document.createElement('div'); r.className='row';
+      r.appendChild(winEl(MEDIA[mi++],idx++)); r.appendChild(winEl(MEDIA[mi++],idx++));
+      stream.appendChild(r);
+    } else stream.appendChild(winEl(MEDIA[mi++],idx++));
+  }
+  if(pi<PHRASES.length && idx%3===0) stream.appendChild(phraseEl(PHRASES[pi++],idx++));
+}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ---------- плеер ---------- */
+const audio=document.getElementById('audio'), vinyl=document.getElementById('vinyl');
+const pp=document.getElementById('pp'), fill=document.getElementById('fill');
+const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
+let started=false;
+function setPlaying(on){
+  vinyl.classList.add('spin'); vinyl.classList.toggle('paused',!on);
+  pp.textContent=on?'❚❚':'▶';
+}
+document.getElementById('vinylWrap').addEventListener('click',()=>{
+  if(!started){
+    started=true;
+    audio.play().catch(()=>{});
+    setPlaying(true);
+    document.getElementById('label').classList.add('show');
+    document.getElementById('hint').classList.add('hide');
+    setTimeout(()=>document.getElementById('player').classList.add('on'),700);
+    setTimeout(()=>{
+      document.body.classList.remove('locked');
+      document.getElementById('content').classList.add('on');
+      document.getElementById('scrollHint').classList.add('on');
+      startFloaters();
+    },2200);
+  } else { audio.paused?audio.play():audio.pause(); }
+});
+pp.onclick=()=>{audio.paused?audio.play():audio.pause()};
+document.getElementById('stop').onclick=()=>{audio.pause();audio.currentTime=0};
+audio.addEventListener('play',()=>setPlaying(true));
+audio.addEventListener('pause',()=>setPlaying(false));
+audio.addEventListener('loadedmetadata',()=>document.getElementById('dur').textContent=fmt(audio.duration));
+audio.addEventListener('timeupdate',()=>{
+  document.getElementById('cur').textContent=fmt(audio.currentTime);
+  fill.style.width=(audio.currentTime/(audio.duration||1)*100)+'%';
+});
+audio.addEventListener('ended',()=>{audio.currentTime=0;audio.play()});
+document.getElementById('bar').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  if(audio.duration) audio.currentTime=(e.clientX-r.left)/r.width*audio.duration;
+});
+
+/* ---------- летающие сердечки и надписи ---------- */
+function floater(){
+  const el=document.createElement('div'); el.className='floater';
+  if(Math.random()<.06){
+    el.innerHTML=`<div class="fphrase pixel" style="background:${pick(COLORS)}">${pick(LOVE_POPS)}</div>`;
+  } else { el.textContent=pick(FLOAT); el.style.fontSize=rnd(22,44)+'px'; }
+  el.style.left=rnd(2,82)+'vw';
+  el.style.setProperty('--dx',rnd(-60,60)+'px');
+  el.style.setProperty('--rot',rnd(-40,40)+'deg');
+  const t=rnd(6,10); el.style.animationDuration=t+'s';
+  document.body.appendChild(el); setTimeout(()=>el.remove(),t*1000+200);
+}
+function toast(){
+  if(loveShown) return;
+  const t=document.createElement('div'); t.className='toast';
+  t.textContent=pick(LOVE_POPS);
+  document.body.appendChild(t); setTimeout(()=>t.remove(),2700);
+}
+function sticker(){
+  const s=document.createElement('img'); s.className='stick'; s.src='assets/'+pick(['sticker1.webp','sticker2.webp']);
+  s.style.left=rnd(0,80)+'vw'; s.style.top=rnd(15,80)+'vh';
+  document.body.appendChild(s); setTimeout(()=>s.remove(),3000);
+}
+function startFloaters(){
+  setInterval(floater,1100);
+  setInterval(toast,28000); setTimeout(toast,12000);
+  setInterval(sticker,7000);
+}
+
+/* ---------- конфетти ---------- */
+const cv=document.getElementById('fx'), cx=cv.getContext('2d'); let parts=[];
+function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+addEventListener('resize',resize); resize();
+function burst(x,y,n=220){
+  for(let i=0;i<n;i++){
+    const a=rnd(0,Math.PI*2), v=rnd(4,15);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-rnd(2,6),g:rnd(.18,.32),s:rnd(5,11),c:pick(COLORS.concat(['#fff','#ff0066'])),
+      r:rnd(0,6),vr:rnd(-.3,.3),life:rnd(110,190),heart:Math.random()<.3});
+  }
+  if(!anim) loop();
+}
+let anim=false;
+function loop(){
+  anim=true; cx.clearRect(0,0,innerWidth,innerHeight);
+  parts=parts.filter(p=>p.life-->0);
+  for(const p of parts){
+    p.vy+=p.g; p.vx*=.985; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.globalAlpha=Math.min(1,p.life/40);
+    cx.fillStyle=p.c;
+    if(p.heart){cx.font=(p.s*2.4)+'px serif';cx.fillText('♥',0,0)}
+    else cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+    cx.restore();
+  }
+  if(parts.length) requestAnimationFrame(loop); else {anim=false;cx.clearRect(0,0,innerWidth,innerHeight)}
+}
+
+/* ---------- сердце ---------- */
+const heart=document.getElementById('heart'), note=document.getElementById('tapnote');
+const NOTES=[""];
+let taps=0, loveShown=false; const NEED=8;
+heart.addEventListener('click',e=>{
+  if(loveShown) return;
+  taps++;
+  const s=1+taps*.11; heart.style.setProperty('--s',s); heart.style.transform=`scale(${s})`;
+  heart.classList.remove('shake'); void heart.offsetWidth; heart.classList.add('shake');
+  note.textContent=NOTES[Math.min(taps-1,NOTES.length-1)];
+  const r=heart.getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,14);
+  if(navigator.vibrate) navigator.vibrate(20);
+  if(taps>=NEED){
+    loveShown=true;
+    setTimeout(()=>{
+      const rr=heart.getBoundingClientRect(), x=rr.left+rr.width/2, y=rr.top+rr.height/2;
+      heart.style.display='none'; note.textContent='';
+      const b=document.getElementById('boom'); b.classList.add('go');
+      burst(x,y,320); setTimeout(()=>burst(innerWidth*.2,innerHeight*.3,140),250); setTimeout(()=>burst(innerWidth*.8,innerHeight*.35,140),450);
+      if(navigator.vibrate) navigator.vibrate([60,40,120]);
+      setTimeout(()=>document.getElementById('love').classList.add('on'),350);
+    },250);
+  }
+});
+</script>
+</body>
+</html>
